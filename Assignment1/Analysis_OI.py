@@ -51,15 +51,13 @@ def save_df_to_csv(df, save_dir, filename):
     save_path = os.path.join(save_dir, filename)
     df.to_csv(save_path, index=False)
 
-def plot_oi_volume_price_vs_time(csv_path):
+def plot_oi_volume_price_vs_time(csv_path, save_dir, filename='oi_volume_price_plot.png'):
     """
     Reads a merged DataFrame from CSV, filters Date-Time, OI, Volume, and Close Price columns,
-    and plots OI & Volume on right y-axis, Close Price on left y-axis vs Time. Interactive plot.
-    Close Price is a line, OI is a bar, Volume is a bar (stacked, but with different colors for clarity).
+    and saves a static plot (OI & Volume as overlaid bars, Close Price as a line) to the given directory.
     """
-    import plotly.graph_objs as go
-    import plotly.offline as pyo
-    import pandas as pd
+    import matplotlib.pyplot as plt
+    import os
 
     df = pd.read_csv(csv_path)
     date_col = 'Date-Time' if 'Date-Time' in df.columns else 'date'
@@ -69,27 +67,42 @@ def plot_oi_volume_price_vs_time(csv_path):
 
     df[date_col] = pd.to_datetime(df[date_col])
 
-    trace_close = go.Scatter(x=df[date_col], y=df[close_col], name='Close Price', yaxis='y1', line=dict(color='green', width=2), mode='lines')
-    # OI and Volume as overlaid bars, both starting from y=0, but with different colors and some transparency
-    trace_oi = go.Bar(x=df[date_col], y=df[oi_col], name='Open Interest (OI)', yaxis='y2', marker_color='blue', opacity=0.5, offsetgroup=0, width=50000000)
-    trace_volume = go.Bar(x=df[date_col], y=df[volume_col], name='Volume', yaxis='y2', marker_color='orange', opacity=0.8, offsetgroup=0, width=50000000)
+    fig, ax1 = plt.subplots(figsize=(18, 7))  # Increased width for more x-axis space
+    ax1.plot(df[date_col], df[close_col], label='Close Price', color='green', linewidth=2)
+    ax1.set_xlabel('Date')
+    ax1.set_ylabel('Close Price', color='green')
+    ax1.tick_params(axis='y', labelcolor='green')
 
-    layout = go.Layout(
-        title='OI & Volume (right, overlaid bars) and Close Price (left, line) vs Time',
-        xaxis=dict(title='Date'),
-        yaxis=dict(title='Close Price', titlefont=dict(color='green'), tickfont=dict(color='green')),
-        yaxis2=dict(title='OI / Volume', titlefont=dict(color='blue'), tickfont=dict(color='blue'),
-                    overlaying='y', side='right', showgrid=False, rangemode='tozero'),
-        barmode='overlay',
-        legend=dict(x=0, y=1.1, orientation='h'),
-        margin=dict(l=60, r=60, t=60, b=60),
-        hovermode='x unified',
-    )
+    ax2 = ax1.twinx()
+    width = 2  # days, for bar width
+    ax2.bar(df[date_col], df[oi_col], label='Open Interest (OI)', color='blue', alpha=0.5, width=width)
+    ax2.bar(df[date_col], df[volume_col], label='Volume', color='orange', alpha=0.5, width=width)
+    ax2.set_ylabel('OI / Volume', color='blue')
+    ax2.tick_params(axis='y', labelcolor='blue')
 
-    fig = go.Figure(data=[trace_close, trace_oi, trace_volume], layout=layout)
-    pyo.plot(fig)
+    # Set x-axis major ticks to every month
+    import matplotlib.dates as mdates
+    ax1.xaxis.set_major_locator(mdates.MonthLocator())
+    ax1.xaxis.set_major_formatter(mdates.DateFormatter('%b %Y'))
+    fig.autofmt_xdate()
+
+    # Combine legends
+    lines_1, labels_1 = ax1.get_legend_handles_labels()
+    lines_2, labels_2 = ax2.get_legend_handles_labels()
+    ax2.legend(lines_1 + lines_2, labels_1 + labels_2, loc='upper left')
+
+    plt.title('OI & Volume (right, overlaid bars) and Close Price (left, line) vs Time')
+    plt.tight_layout()
+    os.makedirs(save_dir, exist_ok=True)
+    save_path = os.path.join(save_dir, filename)
+    plt.savefig(save_path)
+    plt.close(fig)
     
 # merge_oi_with_resampled('./Assignment1/OI/FEIcm_OI.xlsx','./Assignment1/Cleaned_DataM/resampled_1d', './Assignment1/Merged_FEI_OI_Data')
 # give contract number to plot_oi_volume_price_vs_time
-i = 1 #1 to 13
-plot_oi_volume_price_vs_time(f'./Assignment1/Merged_FEI_OI_Data/FEIcm{i}_ohlcv_oi.csv')
+for i in range(1, 14):
+    plot_oi_volume_price_vs_time(
+        f'./Assignment1/Merged_FEI_OI_Data/FEIcm{i}_ohlcv_oi.csv',
+        './Assignment1/Plots',
+        f'FEIcm{i}_oi_volume_price_plot.png'
+    )
