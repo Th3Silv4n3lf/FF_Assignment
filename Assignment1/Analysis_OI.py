@@ -90,4 +90,6 @@ def plot_oi_volume_price_vs_time(csv_path):
     pyo.plot(fig)
     
 # merge_oi_with_resampled('./Assignment1/OI/FEIcm_OI.xlsx','./Assignment1/Cleaned_DataM/resampled_1d', './Assignment1/Merged_FEI_OI_Data')
-plot_oi_volume_price_vs_time('./Assignment1/Merged_FEI_OI_Data/FEIcm1_ohlcv_oi.csv')
+# give contract number to plot_oi_volume_price_vs_time
+i = 1 #1 to 13
+plot_oi_volume_price_vs_time(f'./Assignment1/Merged_FEI_OI_Data/FEIcm{i}_ohlcv_oi.csv')
