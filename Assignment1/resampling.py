@@ -44,7 +44,11 @@ def trim_years(df, start_year=2006, end_year=2009):
     Trim the DataFrame to only include rows where the year is between start_year and end_year (inclusive).
     Assumes 'Date-Time' is a datetime or string in ISO format.
     """
-    df['Date-Time'] = pd.to_datetime(df['Date-Time'])
+    #first check if date-time is already in datetime format
+    if not pd.api.types.is_datetime64_any_dtype(df['Date-Time']):
+        # Convert to datetime if not already
+        df['Date-Time'] = pd.to_datetime(df['Date-Time'])
+    # Filter rows based on year
     mask = (df['Date-Time'].dt.year >= start_year) & (df['Date-Time'].dt.year <= end_year)
     return df.loc[mask].copy()
 
@@ -69,14 +73,15 @@ def batch_resample_ohlcv(resample_param):
         else:
             print(f'File not found: {in_path}')
 
-# Example usage:
-# batch_resample_ohlcv('1min')
-# batch_resample_ohlcv('15min')
-# batch_resample_ohlcv('1h')
-# batch_resample_ohlcv('1d')
+if __name__ == "__main__":
+    # Example usage:
+    # batch_resample_ohlcv('1min')
+    # batch_resample_ohlcv('15min')
+    # batch_resample_ohlcv('1h')
+    # batch_resample_ohlcv('1d')
 
-batch_resample_ohlcv('1min')
-batch_resample_ohlcv('15min')
-batch_resample_ohlcv('1h')
-batch_resample_ohlcv('1d')
-# The above code will resample the OHLCV data for each of the specified intervals and save them in a new directory.
+    batch_resample_ohlcv('1min')
+    batch_resample_ohlcv('15min')
+    batch_resample_ohlcv('1h')
+    batch_resample_ohlcv('1d')
+    # The above code will resample the OHLCV data for each of the specified intervals and save them in a new directory.
