@@ -1,0 +1,7 @@
+Total Trades: 51
+Winning Trades: 25
+Losing Trades: 26
+Win Rate: 0.49019607843137253
+Total PnL: 3087.4999999998918
+Average PnL per Trade: 60.539215686272385
+Expectancy: 60.539215686272385
